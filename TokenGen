@@ -1,0 +1,280 @@
+/*词法分析程序*/
+package grammerAny;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.swing.JTextArea;
+
+public class TokenGen {
+	private JTextArea textArea1;
+    private LineNumberHeaderView z;
+    public static boolean success;
+	public TokenGen(JTextArea textArea1,LineNumberHeaderView z) {
+		this.textArea1=textArea1;
+		this.z=z;
+		this.success=false;
+	}
+    public int[][] stategram = {{1, 2, 0, 24,25,26,27,28,29,30,31,32,33,5,34,3,6,38}, {1,1,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21}, {-1, 2, 22,22,22,22,22,22,22,22,22,22,22,22,22,-1,22,22},
+            {4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,-1,4,4},{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,23,-1,-1},{35,35,35,35,35,35,35,35,35,35,35,35,35,36,35,35,35,35},
+            {-1,-1,-1,-1,-1,-1,-1,-1,37,-1,-1,-1,-1,-1,-1,-1,-1,-1}};//7/18
+    private String[] keywords={"program","type","integer","char","array","of","record","end","var","procedure","begin","if","then","else","fi","while","do","endwh",
+            "read","write","return"};
+    public void gentokenlist(String[] code) throws IOException {
+        List<Token> tokens = new LinkedList<Token>();
+        //BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String content = null,biaozhifu=null;
+        int contentlen = 0, startindexofoneword = 0, state = 0,rowcount=0,positioninrow=0,temint=0,terminalflag=0;
+        char temchar = '\0';
+        //content = br.readLine();
+        int count=0;
+        
+        rowcount++;
+        while (count<code.length) {
+        	content=code[count];
+            content=content+"  ";
+            contentlen = content.length();
+            positioninrow=0;
+            for (int i = 0; i < contentlen; i++) { 
+                temchar = content.charAt(i);
+                //System.out.println("temchar:"+temchar);
+                if ((temchar <= 'z' && temchar >= 'a') || (temchar <= 'Z' && temchar >= 'A'))//{
+                    state = stategram[state][0];//System.out.println("state:"+state);}
+                else if (temchar <= '9' && temchar >= '0')
+                    state = stategram[state][1];
+                else if (temchar == ' ')
+                    state = stategram[state][2];
+                else if(temchar == '+')
+                    state = stategram[state][3];
+                else if(temchar == '-')
+                    state = stategram[state][4];
+                else if(temchar == '*')
+                    state = stategram[state][5];
+                else if(temchar == '/')
+                    state = stategram[state][6];
+                else if(temchar == '<')
+                    state = stategram[state][7];
+                else if(temchar == '=')
+                    state = stategram[state][8];
+                else if(temchar == '(')
+                    state = stategram[state][9];
+                else if(temchar == ')')
+                    state = stategram[state][10];
+                else if(temchar == '[')
+                    state = stategram[state][11];
+                else if(temchar == ']')
+                    state = stategram[state][12];
+                else if(temchar == '.')
+                    state = stategram[state][13];
+                else if(temchar == ';')
+                    state = stategram[state][14];
+                else if(temchar == '\'')
+                    state = stategram[state][15];
+                else if(temchar == ':')
+                    state = stategram[state][16];
+                else if(temchar == ',')
+                    state = stategram[state][17];
+                switch (state) {
+                    case 0:{
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 21:{
+                        biaozhifu=content.substring(startindexofoneword,i);
+                        temint=iskeyword(biaozhifu);
+                        if(temint==-1){
+                            positioninrow++;
+                            tokens.add(new Token("ID",biaozhifu,rowcount,positioninrow));
+                        }
+                        else {
+                            positioninrow++;
+                            tokens.add(new Token(keywords[temint].toUpperCase(),biaozhifu,rowcount,positioninrow));
+                        }
+                        state=0;
+                        startindexofoneword=i;
+                        i--;
+                        break;
+                    }
+                    case 22:{
+                        positioninrow++;
+                        biaozhifu=content.substring(startindexofoneword,i);
+                        tokens.add(new Token("INTC",biaozhifu,rowcount,positioninrow));
+                        state=0;
+                        startindexofoneword=i;
+                        i--;
+                        break;
+                    }
+                    case 23:{
+                        positioninrow++;
+                        biaozhifu=content.substring(startindexofoneword+1,i);
+                        tokens.add(new Token("INTC",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 24:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("+",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 25:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("-",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 26:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("*",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 27:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("/",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 28:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("<",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 29:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("=",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 30:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("(",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 31:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token(")",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 32:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("[",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 33:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token("]",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 34:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token(";",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 35:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i-1,i);
+                        tokens.add(new Token(".",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        if(temchar!=' '||content.charAt(i+1)!=' '||(i+1)<(contentlen-1)){
+                          this.textArea1.setText(this.textArea1.getText()+"第"+rowcount+"行出错!!");
+                   		 //System.out.println();
+                   		 z.setErrnumber(rowcount);
+                   		 z.repaint();
+                            //System.out.println();
+                            return;
+                        }
+                        terminalflag=1;
+                        state=0;
+                        startindexofoneword=i;
+                        i--;
+                        break;
+                    }
+                    case 36:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i-1,i+1);
+                        tokens.add(new Token("..",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 37:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i-1,i+1);
+                        tokens.add(new Token(":=",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case 38:{
+                        positioninrow++;
+                        biaozhifu=content.substring(i,i+1);
+                        tokens.add(new Token(",",biaozhifu,rowcount,positioninrow));//字符也当成是数值来保存
+                        state=0;
+                        startindexofoneword=i+1;
+                        break;
+                    }
+                    case -1:{
+                    	this.textArea1.setText(this.textArea1.getText()+"第"+rowcount+"行出错!!");
+                  		 //System.out.println();
+                  		 z.setErrnumber(rowcount);
+                  		 z.repaint();
+                        //System.out.println("第"+rowcount+"行出错!!");
+                        return;
+                    }
+                }
+                //System.out.println("state:"+state);
+                if(terminalflag==1)break;
+            }
+            if(terminalflag==1)break;
+            rowcount++;
+            startindexofoneword = 0;
+            state = 0;
+            count++;
+            //content=br.readLine();
+            
+        }
+        tokens.add(new Token("#","#",rowcount,positioninrow));
+        Token.tokenList=tokens;
+        this.success=true;
+    }
+    public int iskeyword(String word){
+        for(int i=0;i<keywords.length;i++){
+            if(word.equals(keywords[i]))
+                return i;
+        }
+        return -1;
+    }
+  
+}
