@@ -1,0 +1,141 @@
+/*分析器界面*/
+package grammerAny;
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JTextArea;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.awt.event.ActionEvent;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+
+public class CodeSNLUI extends JFrame {
+    private TokenGen tokenGen;
+	private JPanel contentPane;
+	private JButton button1, button2;
+	private Listener_Button1 lister_button1;
+	private Listener_Button2 lister_button2;
+	private JScrollPane scrollPane1,scrollPane2;
+    private JTextArea textArea1,textArea2; 
+    private LineNumberHeaderView lnhv;
+	/**
+	 * Launch the application.
+	 */
+	
+
+	/**
+	 * Create the frame.
+	 */
+	public CodeSNLUI() {
+		
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 560, 696);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		lister_button1=new Listener_Button1();
+		lister_button2=new Listener_Button2(this.tokenGen);
+		
+	    button1 = new JButton("\u6E05\u7A7A");
+		button1.setBounds(478, 10, 68, 38);
+		contentPane.add(button1);
+		button1.addActionListener(lister_button1);
+			
+		button2 = new JButton("\u7F16\u8BD1");
+		button2.addActionListener(lister_button2);
+		button2.setBounds(478, 74, 68, 38);
+		contentPane.add(button2);
+		
+		scrollPane1 = new JScrollPane();
+		scrollPane1.setBounds(0, 10, 468, 496);
+		contentPane.add(scrollPane1);
+		textArea1 = new JTextArea();
+		scrollPane1.setViewportView(textArea1);
+		lnhv=new LineNumberHeaderView();
+		scrollPane1.setRowHeaderView(lnhv);
+		scrollPane2 = new JScrollPane();
+		
+		scrollPane2.setBounds(0, 511, 546, 148);
+		
+		contentPane.add(scrollPane2);
+		
+		textArea2 = new JTextArea();
+		scrollPane2.setViewportView(textArea2);
+		
+	}
+	class Listener_Button1 implements ActionListener{
+		public void actionPerformed(ActionEvent event) {
+			textArea1.setText("");
+	}}
+	class Listener_Button2 implements ActionListener{
+		private TokenGen tokenGen;
+		public Listener_Button2(TokenGen tokenGen) {
+			this.tokenGen=tokenGen;
+		}
+		public void actionPerformed(ActionEvent event) {
+			//System.out.println("**********************************************************");
+			if(textArea1.getText().isEmpty()) {
+				JOptionPane.showMessageDialog(null,"请输入SNL程序代码！");
+				return;
+			}
+			try {	
+			String[] code=textArea1.getText().split("\n");
+			
+			
+			lnhv.setErrnumber(-1);
+			lnhv.repaint();
+			tokenGen=new TokenGen(textArea2,lnhv);
+			tokenGen.gentokenlist(code);
+			if(TokenGen.success) {
+				if(Token.tokenList!=null)
+		            System.out.println(Token.tokenList.size());
+		        BufferedWriter bw1= new BufferedWriter(new FileWriter("D:/token.txt"));
+		        for(int i=0;i<Token.tokenList.size();i++) {
+		        	bw1.write(Token.tokenList.get(i).id+" ");
+		        	//System.out.println(Token.tokenList.get(i).id+" ");
+		        	bw1.newLine();
+		        }
+		        bw1.close();
+		        textArea2.setText("词法分析完成！！结果Token序列已存入D:/token.txt");
+		        
+				GrammerAny ga=new GrammerAnalyse(textArea2,lnhv);
+				ga.ReadToken();		
+				ga.Program(GrammerTree.root);
+				ga.Match("#");
+				
+				GrammerTree tre=new GrammerTree();
+				//System.out.print(GrammerTree.root.Name);
+				tre.setDrawW(GrammerTree.root);
+				BufferedWriter bw= new BufferedWriter(new FileWriter("D:/tree.txt"));
+				bw.write(GrammerTree.root.Name);
+				tre.drawSubTree(GrammerTree.root,bw);
+				if(GrammerAnalyse.times>0)
+				textArea2.setText(textArea2.getText()+"\n程序语法分析完成！！！结果语法树已存入D:/tree.txt");
+				//System.out.println("程序语法分析完成！！！结果语法树已存入D:/tree.txt");
+				BufferedWriter x= new BufferedWriter(new FileWriter("D:/treeText.txt"));
+				x.write(GrammerTree.root.Name);
+				for(int space=0;space<11-GrammerTree.root.Name.length();space++) {
+					bw.write(" ");
+				}
+				tre.drawSubTreeText(GrammerTree.root,x);
+				if(GrammerAnalyse.times>0)
+				textArea2.setText(textArea2.getText()+"\n程序语法分析完成！！！结果文本已存入D:/treeText.txt");
+				//System.out.println("程序语法分析完成！！！结果文本已存入D:/treeText.txt");
+				
+			}
+	
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+			
+	
+	}}
+}
