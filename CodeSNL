@@ -1,0 +1,26 @@
+package grammerAny;
+
+import java.awt.EventQueue;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class CodeSNL {
+	public static void main(String args[])throws Exception {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CodeSNLUI frame = new CodeSNLUI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		
+        
+	}
+
+}
